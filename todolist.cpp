@@ -5,6 +5,7 @@
 TodoList::TodoList(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::TodoList),
+    centralwidget(new QWidget(this)),
     displayArea(new QWidget(this)),
     stackedWidget(new QStackedWidget(displayArea)),
     tasklistWidget(new QWidget(stackedWidget)),
@@ -14,27 +15,50 @@ TodoList::TodoList(QWidget *parent)
 {
     ui->setupUi(this);
     this->setWindowTitle("Happy Todo List");
-    this->setFixedSize(1080,720);
-    this->setStyleSheet("QMainWindow{background-color : #f7f7f7;}");
+    //setWindowFlags(Qt::FramelessWindowHint);
+    //setAttribute(Qt::WA_TranslucentBackground); // 可选：如果希望窗口背景透明
+    //this->setStyleSheet("QMainWindow{background-color : #f7f7f7;}");
 }
 
 TodoList::~TodoList()
 {
     delete ui;
-    delete kind_taglist;
-    qDebug()<<"Good bye!\n";
+    //delete kind_taglist;
+    //qDebug()<<"Kind_taglist deleted";
+    qDebug()<<"Good bye!";
 }
 
 void TodoList::init()
 {
     tasklist = new TaskList(this);
     tasklist->loadFromJson("tasklist.json");//目前固定filepath为可执行文件所在文件夹下的json文件
-    kind_taglist = new Kind_TagList();//初始化kind_tag列表，默认4种类种类标签
+    //kind_taglist = new Kind_TagList();//初始化kind_tag列表，默认4种类种类标签
+    //输出tasklist信息
+    for (int i = 0; i < tasklist->tasknum(); i++) {
+        qDebug() << "Task[" << i << "]:";
+        qDebug() << "id:" << tasklist->getTask(i)->getid();
+        qDebug() << "name:" << tasklist->getTask(i)->getname();
+        qDebug() << "description:" << tasklist->getTask(i)->getdescription();
+        qDebug() << "settingdate:" << tasklist->getTask(i)->get_settingdate().toString();
+        qDebug() << "ddldate:" << tasklist->getTask(i)->get_ddldate().toString();
+        qDebug() << "ddltime:" << tasklist->getTask(i)->get_ddltime().toString();
+        qDebug() << "kind:" << tasklist->getTask(i)->get_task_kind().getname();
+        qDebug() << "attribute" << tasklist->getTask(i)->get_task_attribute().get_priority();
+        qDebug() << "status" << tasklist->getTask(i)->get_status();
+        qDebug() << "trigger" << tasklist->getTask(i)->get_trigger();
+        qDebug() << '\n';
+    }
 }
 
 void TodoList::initUI()
 {
     //初始化UI界面
+    centralwidget->setGeometry(QRect(QPoint(0,0),QSize(1080,720)));
+    centralwidget->setStyleSheet("QWidget{background-color : black}");
+    setCentralWidget(centralwidget);
+    this->setFixedSize(centralwidget->size());
+    displayArea->setGeometry(QRect(QPoint(60,40),QSize(1020,680)));
+    displayArea->setStyleSheet("QWidget{background-color : transparent}");
     //顶栏
     topBar = new QWidget(this);
     topBar->setGeometry(QRect(QPoint(0, 0), QSize(1080, 40)));
@@ -72,7 +96,7 @@ void TodoList::initUI()
     add->setStyleSheet(add_styleSheet);
 
     QSize add_initialsize = add->size();
-    connect(add, &QPushButton::clicked, topBar, [add, add_initialsize](){
+    connect(add, &QPushButton::clicked, [this, add, add_initialsize](){
         QSize add_newsize = add_initialsize * 0.8;
         add->resize(add_newsize);
         //缩小后，按钮的位置也要相应变化
@@ -82,6 +106,8 @@ void TodoList::initUI()
             add->resize(add_initialsize);
             add->move(920, 0);
         });
+        //展示添加任务窗口
+        this->tasklist->display_add_taskwindow(displayArea);
     });
     add->show();
 
@@ -105,14 +131,17 @@ void TodoList::initUI()
         });
     quit->show();
 
-    displayArea->setGeometry(QRect(QPoint(60,40), QSize(1020,680)));
-    //displayArea->setStyleSheet("QWidget{background-color : black;}");
     stackedWidget->setGeometry(QRect(QPoint(0,0),QSize(1020,680)));
-    stackedWidget->setStyleSheet("QStackedWidget{background-color : white;}");
+    stackedWidget->setStyleSheet("QStackedWidget{background-color : transparent;}");
+
     // 初始化 tasklist, history, settings 窗口内容
-    tasklistWidget->setGeometry(QRect(QPoint(0, 0), QSize(600, 600)));
-    historyWidget->setGeometry(QRect(QPoint(0, 0), QSize(600, 600)));
-    settingsWidget->setGeometry(QRect(QPoint(0, 0), QSize(600, 600)));
+    tasklistWidget->setGeometry(QRect(QPoint(0, 0), QSize(1020, 680)));
+    tasklistWidget->setParent(stackedWidget);
+    historyWidget->setGeometry(QRect(QPoint(0, 0), QSize(1020, 680)));
+    historyWidget->setParent(stackedWidget);
+    feedbackWidget->setGeometry(QRect(QPoint(0,0), QSize(1020,680)));
+    feedbackWidget->setParent(stackedWidget);
+    settingsWidget->setGeometry(QRect(QPoint(0, 0), QSize(1020, 680)));
     tasklistWidget->setStyleSheet("QWidget{background-color : lightblue;}");
     historyWidget->setStyleSheet("QWidget{background-color : lightgreen;}");
     feedbackWidget->setStyleSheet("QWidget{background-color : lightyellow;}");
@@ -123,6 +152,29 @@ void TodoList::initUI()
     stackedWidget->addWidget(historyWidget);
     stackedWidget->addWidget(feedbackWidget);
     stackedWidget->addWidget(settingsWidget);
+
+
+    QLabel* test = new QLabel(tasklistWidget);
+    test->setGeometry(QRect(QPoint(0,0),QSize(200,100)));
+    test->setStyleSheet("QLabel{font:30px;color:red;background-color:lightgreen;}");
+    test->setText("测试tasklistWidget");
+    QToolButton* test2 = new QToolButton(tasklistWidget);
+    test2->setGeometry(100,100,150,40);
+    //test2->setStyleSheet("QToolButton{background-color:red;} QToolButton:hover{background-color:lightblue}");
+    QString test2_styleSheet = R"(
+        QToolButton {
+            background-color: red;
+            border : 2px #dedede;
+        }
+        QToolButton:hover {
+            background-color: lightblue;
+        }
+    )";
+    test2->setStyleSheet(test2_styleSheet);
+    test2->setText("测试按钮");
+    connect(test2, &QToolButton::clicked, [test](){
+        test->setText("测试成功");
+    });
 
     //左侧菜单栏
     leftBar = new QWidget(this);
@@ -144,9 +196,10 @@ void TodoList::initUI()
             background-color: #c6ba82;
         }
     )";
+
     QSize display_tasklist_initialsize = display_tasklist->size();
     display_tasklist->setStyleSheet(display_tasklist_styleSheet);
-    connect(display_tasklist, &QToolButton::clicked, this, [this, display_tasklist, display_tasklist_initialsize]() {
+    connect(display_tasklist, &QToolButton::clicked, [this, display_tasklist, display_tasklist_initialsize]() {
         QSize display_all_newsize = display_tasklist_initialsize * 0.8;
         display_tasklist->resize(display_all_newsize);
         //缩小后，按钮的位置也要相应变化
@@ -157,7 +210,7 @@ void TodoList::initUI()
             display_tasklist->move(10, 80);
         });
         //展示所有任务
-        showTaskList();
+        this->showTaskList();
     });
 
     QToolButton *display_history = new QToolButton(leftBar);
@@ -176,7 +229,7 @@ void TodoList::initUI()
     )";
     display_history->setStyleSheet(display_history_styleSheet);
     QSize display_history_initialsize = display_history->size();
-    connect(display_history, &QToolButton::clicked, this, [this, display_history, display_history_initialsize]() {
+    connect(display_history, &QToolButton::clicked, [this, display_history, display_history_initialsize]() {
         QSize display_history_newsize = display_history_initialsize * 0.8;
         display_history->resize(display_history_newsize);
         //缩小后，按钮的位置也要相应变化
@@ -187,7 +240,7 @@ void TodoList::initUI()
             display_history->move(10, 160);
         });
         //展示历史记录
-        showHistory();
+        this->showHistory();
     });
 
     QToolButton *display_feedback = new QToolButton(leftBar);
@@ -206,7 +259,7 @@ void TodoList::initUI()
     )";
     display_feedback->setStyleSheet(display_feedback_styleSheet);
     QSize display_feedback_initialsize = display_feedback->size();
-    connect(display_feedback, &QToolButton::clicked, this, [this, display_feedback, display_feedback_initialsize]() {
+    connect(display_feedback, &QToolButton::clicked, [this, display_feedback, display_feedback_initialsize]() {
         QSize display_feedback_newsize = display_feedback_initialsize * 0.8;
         display_feedback->resize(display_feedback_newsize);
         //缩小后，按钮的位置也要相应变化
@@ -217,7 +270,7 @@ void TodoList::initUI()
             display_feedback->move(10, 240);
         });
         //展示反馈页面
-        showFeedback();
+        this->showFeedback();
     });
 
     QToolButton *display_settings = new QToolButton(leftBar);
@@ -236,7 +289,7 @@ void TodoList::initUI()
     )";
     display_settings->setStyleSheet(display_settings_styleSheet);
     QSize display_settings_initialsize = display_settings->size();
-    connect(display_settings, &QToolButton::clicked, this, [this, display_settings, display_settings_initialsize]() {
+    connect(display_settings, &QToolButton::clicked, [this, display_settings, display_settings_initialsize]() {
         QSize display_settings_newsize = display_settings_initialsize * 0.8;
         display_settings->resize(display_settings_newsize);
         //缩小后，按钮的位置也要相应变化
@@ -247,8 +300,9 @@ void TodoList::initUI()
             display_settings->move(10, 320);
         });
         //展示设置页面
-        showSettings();
+        this->showSettings();
     });
+
     //初始展示页面
     stackedWidget->setCurrentIndex(0);
 }

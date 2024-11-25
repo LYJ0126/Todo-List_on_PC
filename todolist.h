@@ -9,8 +9,10 @@
 #include <QVector>
 #include <QStackedWidget>
 #include <QVBoxLayout>
+#include <QGraphicsScene>
+#include <QGraphicsView>
 #include "tasklist.h"
-#include "kind_taglist.h"
+//#include "kind_taglist.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -30,15 +32,16 @@ public:
 private:
     Ui::TodoList *ui;
     TaskList* tasklist;
-    Kind_TagList* kind_taglist;
+    //Kind_TagList* kind_taglist;
     QWidget* topBar;//顶栏
     QWidget* leftBar;//左侧菜单栏
-    QWidget* displayArea;//显示区(顶栏下方和左侧菜单栏右侧)
+    QWidget* centralwidget;
+    QWidget* displayArea;//显示区
     QStackedWidget* stackedWidget;
     QWidget* tasklistWidget;
     QWidget* historyWidget;
-    QWidget* settingsWidget;
     QWidget* feedbackWidget;
+    QWidget* settingsWidget;
 
 private slots:
     void showTaskList();

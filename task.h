@@ -36,10 +36,10 @@ private:
     //Alarm alarm;//闹钟
     bool trigger;//是否要闹钟提醒
 public:
-    Task(int _id = 0, QString _name = "任务", QString _description = "", \
+    Task(int _id = 0, QString _name = "", QString _description = "", \
          QDate _settingdate = QDate::currentDate(), QDate _ddldate = QDate:: currentDate().addDays(1),\
          Kind_Tag _task_kind = Kind_Tag("学习任务"), Attribute_Tag _task_attribute = TaskPriority::Normal, \
-         Taskstatus _status = Taskstatus::INCOMPLETE, bool _trigger = true);
+         Taskstatus _status = Taskstatus::INCOMPLETE, bool _trigger = false);
     int getid() const;
     QString getname() const;
     QString getdescription() const;
