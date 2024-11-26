@@ -24,6 +24,8 @@
 //#include <QDebug>
 #include "task.h"
 
+class TodoList;//前向声明
+
 enum Sortmethod
 {
     Setdate,
@@ -51,12 +53,13 @@ public:
     void updateTaskList();
     void set_sortmethod(Sortmethod sortmethod);
     void sortlist();
-    void displayTasks() const;
+    //void displayTasks() const;
     static bool compareBySetDate(Task* a, Task* b);
     static bool compareByDdl(Task* a, Task* b);
     static bool compareByAttribute(Task* a, Task* b);
     void display_add_taskwindow(QWidget* parent);//显示添加任务窗口(由TodoList中的添加任务按钮触发)
-
+    QVector<QWidget*> tasklist_widgets;//一页显示3个任务widget,总共显示1 + tasknum()/3个页面
+    //void generate_tasklist_widgets();
 
 //signals:
 };

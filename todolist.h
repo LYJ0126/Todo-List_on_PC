@@ -33,15 +33,19 @@ private:
     Ui::TodoList *ui;
     TaskList* tasklist;
     //Kind_TagList* kind_taglist;
+    //下面为UI部分
     QWidget* topBar;//顶栏
     QWidget* leftBar;//左侧菜单栏
     QWidget* centralwidget;
     QWidget* displayArea;//显示区
     QStackedWidget* stackedWidget;
-    QWidget* tasklistWidget;
+    QStackedWidget* tasklistWidget;//任务列表,因为有可能要翻页,所以用QStackedWidget
     QWidget* historyWidget;
     QWidget* feedbackWidget;
     QWidget* settingsWidget;
+    void generate_taskwindow(int pos);//为下标为pos的任务生成一个任务窗口
+    void generate_tasklist_widgets();//生成任务列表窗口(若干QWidget*，存储在tasklist->tasklist_widgets中)
+    void update_tasklist_display();//更新任务列表展示页面(更新tasklistWidget)
 
 private slots:
     void showTaskList();

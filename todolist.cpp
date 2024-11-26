@@ -8,7 +8,7 @@ TodoList::TodoList(QWidget *parent)
     centralwidget(new QWidget(this)),
     displayArea(new QWidget(this)),
     stackedWidget(new QStackedWidget(displayArea)),
-    tasklistWidget(new QWidget(stackedWidget)),
+    tasklistWidget(new QStackedWidget(stackedWidget)),
     historyWidget(new QWidget(stackedWidget)),
     feedbackWidget(new QWidget(stackedWidget)),
     settingsWidget(new QWidget(stackedWidget))
@@ -17,7 +17,7 @@ TodoList::TodoList(QWidget *parent)
     this->setWindowTitle("Happy Todo List");
     //setWindowFlags(Qt::FramelessWindowHint);
     //setAttribute(Qt::WA_TranslucentBackground); // 可选：如果希望窗口背景透明
-    //this->setStyleSheet("QMainWindow{background-color : #f7f7f7;}");
+    this->setStyleSheet("QMainWindow{background-color : #f7f7f7;}");
 }
 
 TodoList::~TodoList()
@@ -32,8 +32,10 @@ void TodoList::init()
 {
     tasklist = new TaskList(this);
     tasklist->loadFromJson("tasklist.json");//目前固定filepath为可执行文件所在文件夹下的json文件
+    
     //kind_taglist = new Kind_TagList();//初始化kind_tag列表，默认4种类种类标签
     //输出tasklist信息
+    /*
     for (int i = 0; i < tasklist->tasknum(); i++) {
         qDebug() << "Task[" << i << "]:";
         qDebug() << "id:" << tasklist->getTask(i)->getid();
@@ -47,14 +49,14 @@ void TodoList::init()
         qDebug() << "status" << tasklist->getTask(i)->get_status();
         qDebug() << "trigger" << tasklist->getTask(i)->get_trigger();
         qDebug() << '\n';
-    }
+    }*/
 }
 
 void TodoList::initUI()
 {
     //初始化UI界面
     centralwidget->setGeometry(QRect(QPoint(0,0),QSize(1080,720)));
-    centralwidget->setStyleSheet("QWidget{background-color : black}");
+    centralwidget->setStyleSheet("QWidget{background-color : pink}");
     setCentralWidget(centralwidget);
     this->setFixedSize(centralwidget->size());
     displayArea->setGeometry(QRect(QPoint(60,40),QSize(1020,680)));
@@ -136,13 +138,10 @@ void TodoList::initUI()
 
     // 初始化 tasklist, history, settings 窗口内容
     tasklistWidget->setGeometry(QRect(QPoint(0, 0), QSize(1020, 680)));
-    tasklistWidget->setParent(stackedWidget);
     historyWidget->setGeometry(QRect(QPoint(0, 0), QSize(1020, 680)));
-    historyWidget->setParent(stackedWidget);
     feedbackWidget->setGeometry(QRect(QPoint(0,0), QSize(1020,680)));
-    feedbackWidget->setParent(stackedWidget);
     settingsWidget->setGeometry(QRect(QPoint(0, 0), QSize(1020, 680)));
-    tasklistWidget->setStyleSheet("QWidget{background-color : lightblue;}");
+    tasklistWidget->setStyleSheet("QWidget{background-color : orange;}");
     historyWidget->setStyleSheet("QWidget{background-color : lightgreen;}");
     feedbackWidget->setStyleSheet("QWidget{background-color : lightyellow;}");
     settingsWidget->setStyleSheet("QWidget{background-color : lightcoral;}");
@@ -152,8 +151,46 @@ void TodoList::initUI()
     stackedWidget->addWidget(historyWidget);
     stackedWidget->addWidget(feedbackWidget);
     stackedWidget->addWidget(settingsWidget);
-
-
+    /*
+    //测试tasklistWidget
+    QWidget* test_widget1 = new QWidget(tasklistWidget);
+    test_widget1->setGeometry(QRect(QPoint(0,0),QSize(500,500)));
+    test_widget1->setStyleSheet("QWidget{background-color:lightblue;}");
+    QWidget* test_widget2 = new QWidget(tasklistWidget);
+    test_widget2->setGeometry(QRect(QPoint(0,0),QSize(500,500)));
+    test_widget2->setStyleSheet("QWidget{background-color:pink;}");
+    QWidget* test_widget3 = new QWidget(tasklistWidget);
+    test_widget3->setGeometry(QRect(QPoint(0,0),QSize(500,500)));
+    test_widget3->setStyleSheet("QWidget{background-color:orange;}");
+    tasklistWidget->addWidget(test_widget1);
+    tasklistWidget->addWidget(test_widget2);
+    tasklistWidget->addWidget(test_widget3);
+    tasklistWidget->setCurrentIndex(0);//默认显示第一个窗口
+    //测试按钮,测试翻页
+    QPushButton* test_button = new QPushButton("上一页", test_widget1);
+    test_button->setGeometry(QRect(QPoint(200,600),QSize(100,40)));
+    test_button->setStyleSheet("QPushButton{background-color : #a6c4cc; border : 2px #dedede;}\
+                               QPushButton:hover{background-color : #f7e8a3;}");
+    connect(test_button, &QPushButton::clicked, [this]() {
+        if(tasklistWidget->currentIndex() == 0) {
+            tasklistWidget->setCurrentIndex(2);
+        } else {
+            tasklistWidget->setCurrentIndex(tasklistWidget->currentIndex() - 1);
+        }
+    });
+    QPushButton* test_button2 = new QPushButton("下一页", test_widget1);
+    test_button2->setGeometry(QRect(QPoint(400,600),QSize(100,40)));
+    test_button2->setStyleSheet("QPushButton{background-color : #a6c4cc; border : 2px #dedede;}\
+                                QPushButton:hover{background-color : #f7e8a3;}");
+    connect(test_button2, &QPushButton::clicked, [this]() {
+        if(tasklistWidget->currentIndex() == 2) {
+            tasklistWidget->setCurrentIndex(0);
+        } else {
+            tasklistWidget->setCurrentIndex(tasklistWidget->currentIndex() + 1);
+        }
+    });
+    */
+    /*
     QLabel* test = new QLabel(tasklistWidget);
     test->setGeometry(QRect(QPoint(0,0),QSize(200,100)));
     test->setStyleSheet("QLabel{font:30px;color:red;background-color:lightgreen;}");
@@ -175,6 +212,20 @@ void TodoList::initUI()
     connect(test2, &QToolButton::clicked, [test](){
         test->setText("测试成功");
     });
+    */
+
+    //生成任务窗口
+    for(int i = 0; i < tasklist->tasknum(); i++) {
+        generate_taskwindow(i);
+    }
+    //生成任务列表窗口
+    generate_tasklist_widgets();
+    //将tasklist->tasklist_widgets中的窗口添加到tasklistWidget
+    for (QWidget* tasklist_widget : tasklist->tasklist_widgets) {
+        tasklistWidget->addWidget(tasklist_widget);
+    }
+    //设置默认显示第一个窗口
+    tasklistWidget->setCurrentIndex(0);
 
     //左侧菜单栏
     leftBar = new QWidget(this);
@@ -330,4 +381,186 @@ void TodoList::showSettings()
 {
     stackedWidget->setCurrentIndex(3);
     //qDebug()<<"show page 3";
+}
+
+void TodoList::generate_taskwindow(int pos)
+{
+    //生成任务窗口
+    Task* cur_task = tasklist->getTask(pos);//获取下标为pos的任务。用下标是因为任务的呈现方式是按照tasklist里的任务列表顺序展现的
+    QWidget* taskwindow = cur_task->taskwindow;
+    taskwindow->resize(900, 180);
+    taskwindow->setStyleSheet("QWidget{background-color:#ffffff;border-radius:10px;}");
+    //任务设置日期
+    QLabel* date_and_week = new QLabel(taskwindow);
+    date_and_week->setGeometry(10, 10, 360, 30);
+    //设置日期和星期,格式如"2024年12月31日 星期二",字体为微软雅黑,大小为18
+    date_and_week->setStyleSheet("QLabel{font-family:Microsoft YaHei;font-size:20px;background-color:transparent;color:#9b9b9a;}");
+    QLocale locale = QLocale::Chinese;
+    date_and_week->setText("设置日期:  " + cur_task->get_settingdate().toString("yyyy年MM月dd日  ") + locale.toString(cur_task->get_settingdate(), "ddd"));
+    date_and_week->setAlignment(Qt::AlignLeft);
+    QLabel* task_name = new QLabel(taskwindow);
+    task_name->setGeometry(30, 60, 500, 50);
+    task_name->setStyleSheet("QLabel{font-size:40px;font-weight:bold;background-color:transparent;color:#1c1c19;}");
+    task_name->setText(cur_task->getname());
+    task_name->setAlignment(Qt::AlignLeft);
+    //"截止日期"
+    QLabel* deadline = new QLabel(taskwindow);
+    deadline->setGeometry(10, 130, 130, 40);
+    deadline->setStyleSheet("QLabel{background-color:transparent;font-size:30px;color:#5db1fe;}");
+    deadline->setText("截止日期:");
+    deadline->setAlignment(Qt::AlignLeft);
+    //截止日期和时间
+    QDateTime ddl_datetime = QDateTime(cur_task->get_ddldate(), cur_task->get_ddltime());
+    QLabel* ddl_label = new QLabel(taskwindow);
+    ddl_label->setGeometry(150, 130, 440, 40);
+    ddl_label->setStyleSheet("QLabel{background-color:transparent;font-size:28px;color:#eea041;}");
+    ddl_label->setText(ddl_datetime.toString("yyyy年MM月dd日 hh:mm"));
+    ddl_label->setAlignment(Qt::AlignLeft);
+    //任务种类
+    QLabel* taskkind = new QLabel(taskwindow);
+    taskkind->setGeometry(530, 10, 120, 30);
+    taskkind->setStyleSheet("QLabel{background-color:#d5f6ff;font-size:22px;color:#49565a;border-radius:5px;}");
+    taskkind->setText(cur_task->get_task_kind().getname());
+    taskkind->setAlignment(Qt::AlignCenter);
+    //任务属性
+    QLabel* taskattribute = new QLabel(taskwindow);
+    taskattribute->setGeometry(690, 10, 60, 30);
+    //taskattribute->setStyleSheet("QLabel{background-color:#9edf9b;font-size:22px;}");
+    switch (cur_task->get_task_attribute().get_priority()) {
+    case TaskPriority::Urgent:
+        taskattribute->setStyleSheet("QLabel{background-color:#c5ecc3;font-size:22px;color:#e34631;border-radius:5px;}");
+        taskattribute->setText("紧急");
+        break;
+    case TaskPriority::Important:
+        taskattribute->setStyleSheet("QLabel{background-color:#c5ecc3;font-size:22px;color:#eea144;border-radius:5px;}");
+        taskattribute->setText("重要");
+        break;
+    case TaskPriority::Normal:
+        taskattribute->setStyleSheet("QLabel{background-color:#c5ecc3;font-size:22px;color:#1a251a;border-radius:5px;}");
+        taskattribute->setText("普通");
+        break;
+    default:
+        taskattribute->setStyleSheet("QLabel{background-color:#c5ecc3;font-size:22px;color:#1a251a;border-radius:5px;}");
+        taskattribute->setText("普通");
+    }
+    taskattribute->setAlignment(Qt::AlignCenter);
+    //任务状态设置
+    QLabel* status_label = new QLabel(taskwindow);
+    status_label->setGeometry(700, 70, 90, 30);
+    status_label->setStyleSheet("QLabel{background-color:transparent;font-size:22px;color:#e563b8;}");
+    status_label->setText("已完成");
+    status_label->setAlignment(Qt::AlignCenter);
+    //确认完成按钮
+    QCheckBox* complete_checkbox = new QCheckBox(taskwindow);
+    complete_checkbox->setGeometry(800, 70, 30, 30);
+    complete_checkbox->setStyleSheet("QCheckBox{background-color:transparent}");
+    complete_checkbox->setChecked(false);//默认未完成,点击后弹出确认框,确认后任务删除
+    //确认完成按钮点击事件
+    //connect(complete_checkbox, &QCheckBox::clicked, this, &Task::complete_task);
+    //编辑按钮
+    QPushButton* edit_button = new QPushButton(taskwindow);
+    edit_button->setGeometry(780, 20, 30, 30);
+    QPixmap edit_icon(":/pic_resources/edit.png");
+    edit_button->setIcon(QIcon(edit_icon));
+    edit_button->setIconSize(QSize(24, 24));
+    edit_button->setStyleSheet("QPushButton{background-color:transparent;border-radius:3px;}\
+        QPushButton:hover{ background-color:#d5d7d8; }"
+    );
+    //点击编辑按钮弹出编辑窗口
+    // pass
+    //删除按钮
+    QPushButton* delete_button = new QPushButton(taskwindow);
+    delete_button->setGeometry(840, 20, 30, 30);
+    QPixmap delete_icon(":/pic_resources/delete.png");
+    delete_button->setIcon(QIcon(delete_icon));
+    delete_button->setIconSize(QSize(24, 24));
+    delete_button->setStyleSheet("QPushButton{background-color:transparent;border-radius:3px;}\
+        QPushButton:hover{ background-color:#d5d7d8; }"
+    );
+    //点击删除按钮弹出删除确认框
+    // pass
+}
+
+void TodoList::generate_tasklist_widgets()
+{
+    //生成任务列表页面(若干)并添加到tasklist_widgets中,每页显示3个任务
+    int widget_num = tasklist->tasknum() / 3 + 1;
+    QPixmap toleft = QPixmap(":/pic_resources/toleft.png");
+    QPixmap toright = QPixmap(":/pic_resources/toright.png");
+    for (int i = 0; i < widget_num; i++) {
+        QWidget* tasklist_widget = new QWidget(tasklistWidget);
+        tasklist_widget->setGeometry(QRect(QPoint(0, 0), QSize(1020, 680)));
+        tasklist_widget->setStyleSheet("QWidget{background-color : #f7f7f7;}");
+        tasklist->tasklist_widgets.append(tasklist_widget);
+        //把任务列表中下标i*3到i*3+2的任务添加到tasklist_widget中(若没有则不添加)
+        for (int j = i * 3; j < i * 3 + 3 && j < tasklist->tasknum(); j++) {
+            Task* task = tasklist->getTask(j);
+            int posid = j - i * 3;//这个页面中的第几个任务(从0开始)
+            task->taskwindow->setParent(tasklist_widget);
+            task->taskwindow->move(60, 60 + posid * 210);
+        }
+        //顶部添加排序方式选择框
+        QLabel* sort_label = new QLabel(tasklist_widget);
+        sort_label->setGeometry(QRect(QPoint(560, 10), QSize(100, 30)));
+        sort_label->setStyleSheet("QLabel{font-size: 22px; font-weight: bold; color: #aaaaac;background-color : transparent;}");
+        sort_label->setText("排序方式:");
+        QComboBox* sort_combo = new QComboBox(tasklist_widget);
+        sort_combo->setGeometry(QRect(QPoint(690, 10), QSize(180, 30)));
+        sort_combo->setStyleSheet("QComboBox{font-size: 22px; border: 2px #dedede; border-radius: 5px;\
+            color: #747578; background-color: #edeff0;}"
+        );
+        sort_combo->addItem("任务设置时间");
+        sort_combo->addItem("任务截止时间");
+        sort_combo->addItem(" 任务属性 ");
+        //connet;
+        //左右两边添加窗口滑动选择按钮
+        //注意第一个窗口没有左边按钮，最后一个窗口没有右边按钮
+        if (i > 0) {
+            QPushButton* left_button = new QPushButton(tasklist_widget);
+            left_button->setGeometry(QRect(QPoint(10, 320), QSize(40, 40)));
+            left_button->setIcon(QIcon(toleft));
+            left_button->setIconSize(QSize(38, 38));
+            left_button->setStyleSheet("QPushButton{background-color : transparent;border-radius: 5px;}\
+                                        QPushButton:hover{background-color : #c6c6c6}"
+            );
+            //翻到上一页
+            connect(left_button, &QPushButton::clicked, [this, i]() {
+                tasklistWidget->setCurrentIndex(i - 1); 
+            });
+        }
+        if (i < widget_num - 1) {
+            QPushButton* right_button = new QPushButton(tasklist_widget);
+            right_button->setGeometry(QRect(QPoint(970, 320), QSize(40, 40)));
+            right_button->setIcon(QIcon(toright));
+            right_button->setIconSize(QSize(38, 38));
+            right_button->setStyleSheet("QPushButton{background-color : transparent;border-radius: 5px;}\
+                                        QPushButton:hover{background-color : #c6c6c6}"
+            );
+            //翻到下一页
+            connect(right_button, &QPushButton::clicked, [this, i]() {
+                tasklistWidget->setCurrentIndex(i + 1);
+            });
+        }
+    }
+}
+
+void TodoList::update_tasklist_display()
+{
+    //在添加、删除任务以及选择新的排序方式后，会更新tasklist里的tasklist
+    //需要更新tasklist->tasklist_widgets中的任务显示,先清空原有的任务显示
+    while (tasklistWidget->count() > 0) {
+        QWidget* tempwidget = tasklistWidget->widget(0);
+        tasklistWidget->removeWidget(tempwidget);
+    }
+    for (QWidget* tasklist_widget : tasklist->tasklist_widgets) {
+        delete tasklist_widget;
+    }
+    tasklist->tasklist_widgets.clear();
+    //重新生成tasklist_widgets
+    generate_tasklist_widgets();
+    //重新显示任务列表页面
+    for (QWidget* tasklist_widget : tasklist->tasklist_widgets) {
+        tasklistWidget->addWidget(tasklist_widget);
+    }
+    tasklistWidget->setCurrentIndex(0);
 }

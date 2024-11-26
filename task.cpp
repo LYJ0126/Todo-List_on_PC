@@ -1,10 +1,19 @@
 #include "task.h"
 
 Task::Task(int _id, QString _name, QString _description,QDate _settingdate, QDate _ddldate,\
-               Kind_Tag _task_kind, Attribute_Tag _task_attribute, Taskstatus _status, bool _trigger)
+               Kind_Tag _task_kind, Attribute_Tag _task_attribute, Taskstatus _status, bool _trigger, QWidget* _parent)
     :id(_id), name(_name), description(_description), settingdate(_settingdate), ddldate(_ddldate),\
     task_kind(_task_kind), task_attribute(_task_attribute), status(_status), trigger(_trigger)
-{}
+{
+    this->setParent(_parent);
+    taskwindow = new QWidget(_parent);
+}
+
+Task::~Task()
+{
+    //delete taskwindow;
+    qDebug() << "Task with id: " << id << " is deleted";
+}
 
 int Task::getid() const
 {
@@ -142,4 +151,3 @@ void Task::fromJsonObject(const QJsonObject &json)
     //QString alarm_path = json["alarm"].toString();
     trigger = json["trigger"].toBool();
 }
-

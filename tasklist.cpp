@@ -6,6 +6,7 @@ TaskList::TaskList(QWidget *parent, Sortmethod sortmethod)
 {
     tasklist.clear();
     kind_taglist = new Kind_TagList();
+    tasklist_widgets.clear();
 }
 
 TaskList::~TaskList()
@@ -14,8 +15,10 @@ TaskList::~TaskList()
     sortmethod = Setdate;//保存的时候按照设置日期排序
     sortlist();
     saveToJson("tasklist.json");
-    for(Task* task : tasklist) delete task;
+    qDebug()<<"tasklist saved";
     qDebug()<<"tasklist deleted";
+    //for(Task* task : tasklist) delete task;
+    //qDebug()<<"tasklist deleted";
     delete kind_taglist;
     qDebug()<<"kind_taglist deleted";
 }
@@ -125,6 +128,8 @@ void TaskList::loadFromJson(const QString& filepath)
             taskpos++;//编号加一
             Task* task = new Task(taskpos);
             task->fromJsonObject(jsonObj);
+            task->setParent(this);
+            task->taskwindow->setParent(this);
             tasklist.append(task);
         }
         else{
@@ -190,8 +195,11 @@ void TaskList::display_add_taskwindow(QWidget* parent)
     QWidget* addTaskWindow = new QWidget(parent);
     //addTaskWindow->setAttribute(Qt::WA_DeleteOnClose, true);//设置窗口关闭时自动释放内存
     addTaskWindow->setGeometry(QRect(QPoint(0, 0), QSize(1020,680)));
-    addTaskWindow->setStyleSheet("background-color: #f7f7f7;");
+    addTaskWindow->setStyleSheet("QWidget{background-color : #f7f7f7;}");
     Task* newtask = new Task(taskpos + 1);
+    newtask->setParent(this);//这一步很关键，因为有可能用户直接退出程序导致newtask内存泄漏，
+    //所以需要将newtask的父对象设置为this，这样程序退出时，顺着对象树最后会释放newtask的内存
+    newtask->taskwindow->setParent(this);
 
     QLabel* tasktitle = new QLabel();
     tasktitle->setParent(addTaskWindow);
@@ -217,7 +225,7 @@ void TaskList::display_add_taskwindow(QWidget* parent)
     QTextEdit* taskdescEdit = new QTextEdit(addTaskWindow);
     //任务描述输入框
     taskdescEdit->setGeometry(QRect(QPoint(60, 150), QSize(900, 200)));
-    taskdescEdit->setPlaceholderText("请输入任务描述");
+    taskdescEdit->setPlaceholderText("请输入任务描述...");
     taskdescEdit->setStyleSheet("QTextEdit{font-size: 18px; border: 2px #dedede; border-radius: 5px; color: black; background-color: #e6e7e7;}");
     QString input_desc;
     QPushButton* confirm_desc = new QPushButton(addTaskWindow);

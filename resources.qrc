@@ -6,5 +6,9 @@
         <file>pic_resources/show_tasklist.png</file>
         <file>pic_resources/show_feedback.png</file>
         <file>pic_resources/show_settings.png</file>
+        <file>pic_resources/edit.png</file>
+        <file>pic_resources/delete.png</file>
+        <file>pic_resources/toleft.png</file>
+        <file>pic_resources/toright.png</file>
     </qresource>
 </RCC>

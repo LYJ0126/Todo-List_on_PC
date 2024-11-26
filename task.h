@@ -1,6 +1,7 @@
 #ifndef TASK_H
 #define TASK_H
 
+#include <QWidget>
 #include <QString>
 #include <QDate>
 #include <QTime>
@@ -8,6 +9,10 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QFile>
+#include <QPushButton>
+#include <QLabel>
+#include <QDateTime>
+#include <QCheckBox>
 //#include <QDebug>
 #include "kind_tag.h"
 #include "attribute_tag.h"
@@ -18,8 +23,9 @@ enum Taskstatus
     INCOMPLETE
 };
 
-class Task
+class Task : public QWidget
 {
+    Q_OBJECT
 private:
     int id;//任务id。本地json文件是按照任务设置时间存储的,因此初始化后任务id顺序(从1开始)即任务设置时间顺序。
     //注意到删除任务只会让某个任务id的任务消失，但任务仍然按照设置时间顺序排序。
@@ -39,7 +45,8 @@ public:
     Task(int _id = 0, QString _name = "", QString _description = "", \
          QDate _settingdate = QDate::currentDate(), QDate _ddldate = QDate:: currentDate().addDays(1),\
          Kind_Tag _task_kind = Kind_Tag("学习任务"), Attribute_Tag _task_attribute = TaskPriority::Normal, \
-         Taskstatus _status = Taskstatus::INCOMPLETE, bool _trigger = false);
+         Taskstatus _status = Taskstatus::INCOMPLETE, bool _trigger = false, QWidget* _parent = nullptr);
+    ~Task();
     int getid() const;
     QString getname() const;
     QString getdescription() const;
@@ -64,7 +71,8 @@ public:
     void set_trigger(bool _trigger);
     QJsonObject toJsonObject() const;//把Task转换为QJsonObject
     void fromJsonObject(const QJsonObject &json);//从QJsonObject获取信息
-
+    QWidget* taskwindow;//任务窗口,而任务列表的显示(在其parent TaskList的一个实例中)则是靠taskwindow组成的。
+    //void generate_taskwindow();//生成任务窗口
 };
 
 #endif // TASK_H
