@@ -12,7 +12,7 @@ TaskList::TaskList(QWidget *parent, Sortmethod sortmethod)
 TaskList::~TaskList()
 {
     //退出的时候保存tasklist到本地
-    sortmethod = Setdate;//保存的时候按照设置日期排序
+    sortmethod = Setdate;//保存的时候按照设置日期排序(默认排序方式)
     sortlist();
     saveToJson("tasklist.json");
     qDebug()<<"tasklist saved";
@@ -33,8 +33,9 @@ void TaskList::removeTask(int id)
 {
     for(int i = 0; i < tasklist.size(); ++i){
         if(tasklist[i]->getid() == id) {
-            delete tasklist[i];
+            Task* tmptask = tasklist[i];
             tasklist.remove(i);
+            delete tmptask;
             return;
         }
     }
@@ -77,6 +78,11 @@ bool TaskList::compareByAttribute(Task*a ,Task* b)
 void TaskList::set_sortmethod(Sortmethod sortmethod)
 {
     this->sortmethod = sortmethod;
+}
+
+Sortmethod TaskList::get_sortmethod() const
+{
+    return sortmethod;
 }
 
 void TaskList::sortlist()
@@ -128,6 +134,15 @@ void TaskList::loadFromJson(const QString& filepath)
             taskpos++;//编号加一
             Task* task = new Task(taskpos);
             task->fromJsonObject(jsonObj);
+            //检查当前时间是否超过截止日期，如果超过,则不load该任务
+            //这个以后会改成将过期任务放到历史任务列表里
+            QDateTime now = QDateTime::currentDateTime();
+            if (task->get_ddldate() < now.date() || (task->get_ddldate() == now.date() && task->get_ddltime() < now.time())) {
+                //qDebug() << "Task with ID:" << task->getid() << " has expired.";
+                taskpos--;//编号减一
+                delete task;
+                continue;
+            }
             task->setParent(this);
             task->taskwindow->setParent(this);
             tasklist.append(task);

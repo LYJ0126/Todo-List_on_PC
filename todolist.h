@@ -52,6 +52,8 @@ private slots:
     void showHistory();
     void showFeedback();
     void showSettings();
+    void show_add_taskwindow(QWidget* _parent);
+    void show_edit_taskwindow(QWidget* _parent, Task* edit_task, QLabel* task_name, QLabel* ddl_label, QLabel* task_kind, QLabel* task_attribute);
     
 };
 #endif // TODOLIST_H

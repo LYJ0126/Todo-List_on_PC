@@ -42,7 +42,7 @@ private:
 public:
     TaskList(QWidget *parent = nullptr, Sortmethod sortmethod= Setdate);
     ~TaskList();
-    int taskpos;//记录编号到了哪
+    int taskpos;//taskid编号到了哪
     Kind_TagList* kind_taglist;
     void loadFromJson(const QString& filepath);//本地读取数据到tasklist
     void saveToJson(const QString& filepath);
@@ -50,8 +50,8 @@ public:
     void removeTask(int id);
     Task* getTask(int pos);//获取任务,这里是pos而不是id,pos是任务在tasklist中的位置
     int tasknum() const;
-    void updateTaskList();
     void set_sortmethod(Sortmethod sortmethod);
+    Sortmethod get_sortmethod() const;
     void sortlist();
     //void displayTasks() const;
     static bool compareBySetDate(Task* a, Task* b);

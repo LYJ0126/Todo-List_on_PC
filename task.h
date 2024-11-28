@@ -43,7 +43,7 @@ private:
     bool trigger;//是否要闹钟提醒
 public:
     Task(int _id = 0, QString _name = "", QString _description = "", \
-         QDate _settingdate = QDate::currentDate(), QDate _ddldate = QDate:: currentDate().addDays(1),\
+         QDate _settingdate = QDate::currentDate(), QDate _ddldate = QDate:: currentDate().addDays(1), QTime _ddltime = QTime(23, 59, 59), \
          Kind_Tag _task_kind = Kind_Tag("学习任务"), Attribute_Tag _task_attribute = TaskPriority::Normal, \
          Taskstatus _status = Taskstatus::INCOMPLETE, bool _trigger = false, QWidget* _parent = nullptr);
     ~Task();
@@ -73,6 +73,8 @@ public:
     void fromJsonObject(const QJsonObject &json);//从QJsonObject获取信息
     QWidget* taskwindow;//任务窗口,而任务列表的显示(在其parent TaskList的一个实例中)则是靠taskwindow组成的。
     //void generate_taskwindow();//生成任务窗口
+    //重载"="运算符
+    //Task& operator=(const Task& other);
 };
 
 #endif // TASK_H

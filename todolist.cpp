@@ -15,6 +15,7 @@ TodoList::TodoList(QWidget *parent)
 {
     ui->setupUi(this);
     this->setWindowTitle("Happy Todo List");
+    setWindowIcon(QIcon(":/TodoList.ico"));
     //setWindowFlags(Qt::FramelessWindowHint);
     //setAttribute(Qt::WA_TranslucentBackground); // 可选：如果希望窗口背景透明
     this->setStyleSheet("QMainWindow{background-color : #f7f7f7;}");
@@ -32,7 +33,7 @@ void TodoList::init()
 {
     tasklist = new TaskList(this);
     tasklist->loadFromJson("tasklist.json");//目前固定filepath为可执行文件所在文件夹下的json文件
-    
+
     //kind_taglist = new Kind_TagList();//初始化kind_tag列表，默认4种类种类标签
     //输出tasklist信息
     /*
@@ -49,7 +50,8 @@ void TodoList::init()
         qDebug() << "status" << tasklist->getTask(i)->get_status();
         qDebug() << "trigger" << tasklist->getTask(i)->get_trigger();
         qDebug() << '\n';
-    }*/
+    }
+    */
 }
 
 void TodoList::initUI()
@@ -109,7 +111,7 @@ void TodoList::initUI()
             add->move(920, 0);
         });
         //展示添加任务窗口
-        this->tasklist->display_add_taskwindow(displayArea);
+        show_add_taskwindow(displayArea);
     });
     add->show();
 
@@ -394,13 +396,13 @@ void TodoList::generate_taskwindow(int pos)
     QLabel* date_and_week = new QLabel(taskwindow);
     date_and_week->setGeometry(10, 10, 360, 30);
     //设置日期和星期,格式如"2024年12月31日 星期二",字体为微软雅黑,大小为18
-    date_and_week->setStyleSheet("QLabel{font-family:Microsoft YaHei;font-size:20px;background-color:transparent;color:#9b9b9a;}");
+    date_and_week->setStyleSheet("QLabel{font-family:Microsoft YaHei;font-size:20px;background-color:#ffffff;color:#9b9b9a;}");
     QLocale locale = QLocale::Chinese;
     date_and_week->setText("设置日期:  " + cur_task->get_settingdate().toString("yyyy年MM月dd日  ") + locale.toString(cur_task->get_settingdate(), "ddd"));
     date_and_week->setAlignment(Qt::AlignLeft);
     QLabel* task_name = new QLabel(taskwindow);
     task_name->setGeometry(30, 60, 500, 50);
-    task_name->setStyleSheet("QLabel{font-size:40px;font-weight:bold;background-color:transparent;color:#1c1c19;}");
+    task_name->setStyleSheet("QLabel{font-size:40px;font-weight:bold;background-color:#ffffff;color:#1c1c19;}");
     task_name->setText(cur_task->getname());
     task_name->setAlignment(Qt::AlignLeft);
     //"截止日期"
@@ -413,7 +415,7 @@ void TodoList::generate_taskwindow(int pos)
     QDateTime ddl_datetime = QDateTime(cur_task->get_ddldate(), cur_task->get_ddltime());
     QLabel* ddl_label = new QLabel(taskwindow);
     ddl_label->setGeometry(150, 130, 440, 40);
-    ddl_label->setStyleSheet("QLabel{background-color:transparent;font-size:28px;color:#eea041;}");
+    ddl_label->setStyleSheet("QLabel{background-color:#ffffff;font-size:28px;color:#eea041;}");
     ddl_label->setText(ddl_datetime.toString("yyyy年MM月dd日 hh:mm"));
     ddl_label->setAlignment(Qt::AlignLeft);
     //任务种类
@@ -444,19 +446,6 @@ void TodoList::generate_taskwindow(int pos)
         taskattribute->setText("普通");
     }
     taskattribute->setAlignment(Qt::AlignCenter);
-    //任务状态设置
-    QLabel* status_label = new QLabel(taskwindow);
-    status_label->setGeometry(700, 70, 90, 30);
-    status_label->setStyleSheet("QLabel{background-color:transparent;font-size:22px;color:#e563b8;}");
-    status_label->setText("已完成");
-    status_label->setAlignment(Qt::AlignCenter);
-    //确认完成按钮
-    QCheckBox* complete_checkbox = new QCheckBox(taskwindow);
-    complete_checkbox->setGeometry(800, 70, 30, 30);
-    complete_checkbox->setStyleSheet("QCheckBox{background-color:transparent}");
-    complete_checkbox->setChecked(false);//默认未完成,点击后弹出确认框,确认后任务删除
-    //确认完成按钮点击事件
-    //connect(complete_checkbox, &QCheckBox::clicked, this, &Task::complete_task);
     //编辑按钮
     QPushButton* edit_button = new QPushButton(taskwindow);
     edit_button->setGeometry(780, 20, 30, 30);
@@ -467,7 +456,42 @@ void TodoList::generate_taskwindow(int pos)
         QPushButton:hover{ background-color:#d5d7d8; }"
     );
     //点击编辑按钮弹出编辑窗口
-    // pass
+    connect(edit_button, &QPushButton::clicked, [this, cur_task,task_name, ddl_label,taskkind,taskattribute]() {
+        show_edit_taskwindow(displayArea, cur_task, task_name, ddl_label, taskkind, taskattribute);
+    });
+    //任务状态设置
+    QLabel* status_label = new QLabel(taskwindow);
+    status_label->setGeometry(700, 70, 90, 30);
+    status_label->setStyleSheet("QLabel{background-color:transparent;font-size:22px;color:#e563b8;}");
+    status_label->setText("已完成");
+    status_label->setAlignment(Qt::AlignCenter);
+    //确认完成按钮
+    QCheckBox* complete_checkbox = new QCheckBox(taskwindow);
+    complete_checkbox->setGeometry(800, 70, 30, 30);
+    complete_checkbox->setStyleSheet("QCheckBox{background-color:transparent}");
+    complete_checkbox->setChecked(false);//默认未完成,点击后弹出确认框
+    //根据任务是否完成设置
+    if (cur_task->get_status() == Taskstatus::COMPLETED) {
+        complete_checkbox->setChecked(true);
+        complete_checkbox->setEnabled(false);//已完成的任务无法再修改确认完成按钮状态
+    }
+    //点击确认完成按钮后弹出确认框,确认后将任务状态设置为已完成,并且无法再修改确认完成按钮状态,且编辑按钮变为不可点击
+    connect(complete_checkbox, &QCheckBox::clicked, [this, cur_task, complete_checkbox, edit_button]() {
+        if (complete_checkbox->isChecked()) {
+            QMessageBox::StandardButton button = QMessageBox::question(this, "确认完成", "确认将该任务标记为已完成?", QMessageBox::Yes | QMessageBox::No);
+            if (button == QMessageBox::Yes) {
+                cur_task->set_status(Taskstatus::COMPLETED);
+                complete_checkbox->setChecked(true);
+                //无法再修改确认完成按钮状态
+                complete_checkbox->setEnabled(false);
+                //编辑按钮变为不可点击
+                edit_button->setEnabled(false);
+            }
+            else {
+                complete_checkbox->setChecked(false);
+            }
+        }
+        });
     //删除按钮
     QPushButton* delete_button = new QPushButton(taskwindow);
     delete_button->setGeometry(840, 20, 30, 30);
@@ -477,14 +501,28 @@ void TodoList::generate_taskwindow(int pos)
     delete_button->setStyleSheet("QPushButton{background-color:transparent;border-radius:3px;}\
         QPushButton:hover{ background-color:#d5d7d8; }"
     );
-    //点击删除按钮弹出删除确认框
-    // pass
+    //点击删除按钮弹出删除确认框,确认后删除任务,并更新tasklist显示
+    connect(delete_button, &QPushButton::clicked, [this, cur_task]() {
+        QMessageBox::StandardButton button = QMessageBox::question(this, "确认删除", "确认删除该任务?", QMessageBox::Yes | QMessageBox::No);
+        if (button == QMessageBox::Yes) {
+            tasklist->removeTask(cur_task->getid());
+            tasklist->sortlist();
+            update_tasklist_display();//更新tasklist显示
+        }
+    });
 }
 
 void TodoList::generate_tasklist_widgets()
 {
     //生成任务列表页面(若干)并添加到tasklist_widgets中,每页显示3个任务
-    int widget_num = tasklist->tasknum() / 3 + 1;
+    int widget_num = (tasklist->tasknum() + 2) / 3;
+    //qDebug()<<"widget_num:"<<widget_num;
+    //打印任务列表
+    /*
+    for (int i = 0; i < tasklist->tasknum(); i++) {
+        Task* task = tasklist->getTask(i);
+        //qDebug()<<"task"<<i<<"name:"<<task->getname();
+    }*/
     QPixmap toleft = QPixmap(":/pic_resources/toleft.png");
     QPixmap toright = QPixmap(":/pic_resources/toright.png");
     for (int i = 0; i < widget_num; i++) {
@@ -499,6 +537,7 @@ void TodoList::generate_tasklist_widgets()
             task->taskwindow->setParent(tasklist_widget);
             task->taskwindow->move(60, 60 + posid * 210);
         }
+        //qDebug()<<"第"<<i<<"个任务列表页面完成添加任务窗口";
         //顶部添加排序方式选择框
         QLabel* sort_label = new QLabel(tasklist_widget);
         sort_label->setGeometry(QRect(QPoint(560, 10), QSize(100, 30)));
@@ -512,7 +551,42 @@ void TodoList::generate_tasklist_widgets()
         sort_combo->addItem("任务设置时间");
         sort_combo->addItem("任务截止时间");
         sort_combo->addItem(" 任务属性 ");
-        //connet;
+        //排序方式按照tasklist的排序方式设置
+        switch (tasklist->get_sortmethod()) {
+        case Sortmethod::Setdate:
+            sort_combo->setCurrentIndex(0);
+            break;
+        case Sortmethod::Ddl:
+            sort_combo->setCurrentIndex(1);
+            break;
+        case Sortmethod::Attribute:
+            sort_combo->setCurrentIndex(2);
+            break;
+        default:
+            break;
+        }
+        //修改排序方式
+        connect(sort_combo, &QComboBox::currentIndexChanged, [this, sort_combo]() {
+            int index = sort_combo->currentIndex();
+            switch (index) {
+            case 0:
+                tasklist->set_sortmethod(Sortmethod::Setdate);
+                tasklist->sortlist();
+                break;
+            case 1:
+                tasklist->set_sortmethod(Sortmethod::Ddl);
+                tasklist->sortlist();
+                break;
+            case 2:
+                tasklist->set_sortmethod(Sortmethod::Attribute);
+                tasklist->sortlist();
+                break;
+            default:
+                break;
+            }
+            update_tasklist_display();
+            //qDebug()<<"到了这里";
+        });
         //左右两边添加窗口滑动选择按钮
         //注意第一个窗口没有左边按钮，最后一个窗口没有右边按钮
         if (i > 0) {
@@ -525,7 +599,7 @@ void TodoList::generate_tasklist_widgets()
             );
             //翻到上一页
             connect(left_button, &QPushButton::clicked, [this, i]() {
-                tasklistWidget->setCurrentIndex(i - 1); 
+                tasklistWidget->setCurrentIndex(i - 1);
             });
         }
         if (i < widget_num - 1) {
@@ -550,17 +624,503 @@ void TodoList::update_tasklist_display()
     //需要更新tasklist->tasklist_widgets中的任务显示,先清空原有的任务显示
     while (tasklistWidget->count() > 0) {
         QWidget* tempwidget = tasklistWidget->widget(0);
+        tempwidget->close();
+        //tempwidget->deleteLater();
+
         tasklistWidget->removeWidget(tempwidget);
+        /*
+        if (tempwidget->parentWidget() == tasklistWidget) {
+            qDebug() << "tempwidget的父窗口仍然是tasklistWidget";
+        } else {
+            qDebug() << "tempwidget的父窗口已经改变";
+        }*/
     }
+    //qDebug()<<"remove all widgets";
+    //tasklistWidget->removeWidget()并不会真正删除tasklist_widget,只是从tasklistWidget中移除了它
+    //tasklist_widget的父窗口还是tasklistWidget。不需要手动删除tasklist_widget,因为最后删除tasklistWidget时
+    //会顺着对象树一路删除所有子对象,包括tasklist_widget。
+    /*
     for (QWidget* tasklist_widget : tasklist->tasklist_widgets) {
-        delete tasklist_widget;
-    }
+        //delete tasklist_widget;
+        //if(tasklist_widget->parentWidget() == tasklistWidget){
+        //    qDebug()<<"tasklist_widget的父窗口仍然是tasklistWidget";
+        //}
+        //else{
+        //    qDebug()<<"tasklist_widget的父窗口已经改变";
+        //}
+    }*/
     tasklist->tasklist_widgets.clear();
+    //qDebug()<<"delete all tasklist_widgets";
+    //qDebug()<<"tasklist num:"<<tasklist->tasknum();
+    for (int i = 0; i < tasklist->tasknum(); i++) {
+        //Task* task = tasklist->getTask(i);
+        //task->taskwindow = new QWidget(tasklist);//先设置它的parent为tasklist,后面generate_tasklist_widgets()会重新设置它的parent为tasklist_widget
+        generate_taskwindow(i);
+    }
     //重新生成tasklist_widgets
+    //qDebug()<<"before tasklist_widgets num:"<<tasklist->tasklist_widgets.size();
     generate_tasklist_widgets();
+    //qDebug()<<"after tasklist_widgets num:"<<tasklist->tasklist_widgets.size();
     //重新显示任务列表页面
     for (QWidget* tasklist_widget : tasklist->tasklist_widgets) {
         tasklistWidget->addWidget(tasklist_widget);
     }
     tasklistWidget->setCurrentIndex(0);
+    //qDebug()<<"update tasklist display";
+}
+
+
+void TodoList::show_add_taskwindow(QWidget* _parent)
+{
+    //_parent是TodoList::displayArea
+    //下方添加两个按钮，确认和取消
+    //点击确认按钮，检查输入的任务设置参数是否合法，如果合法，则创建Task对象，并添加到tasklist中，关闭窗口并释放窗口占用的内存
+    //然后更新tasklist显示
+    //点击取消按钮，关闭窗口并释放窗口占用的内存
+    QWidget* addTaskWindow = new QWidget(_parent);
+    //addTaskWindow->setAttribute(Qt::WA_DeleteOnClose, true);//设置窗口关闭时自动释放内存
+    addTaskWindow->setGeometry(QRect(QPoint(0, 0), QSize(1020, 680)));
+    addTaskWindow->setStyleSheet("QWidget{background-color : #f7f7f7;}");
+    Task* newtask = new Task(tasklist->taskpos + 1);
+    newtask->setParent(tasklist);//这一步很关键，因为有可能用户直接退出程序导致newtask内存泄漏，
+    //所以需要将newtask的父对象设置为tasklist，这样程序退出时，顺着对象树最后会释放newtask的内存
+    newtask->taskwindow->setParent(tasklist);
+
+    QLabel* tasktitle = new QLabel();
+    tasktitle->setParent(addTaskWindow);
+    tasktitle->move(60, 30);
+    tasktitle->setStyleSheet("QLabel{font-size: 15px; font-weight: bold; color: #b5b5b4;}");
+    tasktitle->setText("任务名");
+    //任务标题输入框
+    QLineEdit* tasktitleEdit = new QLineEdit(addTaskWindow);
+    tasktitleEdit->setGeometry(QRect(QPoint(60, 60), QSize(900, 40)));
+    tasktitleEdit->setPlaceholderText("请输入任务标题...");
+    //输入字体大小
+    tasktitleEdit->setStyleSheet("QLineEdit{font-size: 22px; border: 2px #dedede; border-radius: 5px; color: black; background-color: #e6e7e7;}");
+    connect(tasktitleEdit, &QLineEdit::editingFinished, [newtask, tasktitleEdit]() {
+        newtask->setname(tasktitleEdit->text());
+        //qDebug() << "input_name:" << newtask->getname();
+    });
+    QLabel* taskdesc = new QLabel();
+    taskdesc->setParent(addTaskWindow);
+    taskdesc->move(60, 120);
+    taskdesc->setStyleSheet("QLabel{font-size: 15px; font-weight: bold; color: #b5b5b4;}");
+    taskdesc->setText("任务描述");
+    //任务描述输入框
+    QTextEdit* taskdescEdit = new QTextEdit(addTaskWindow);
+    //任务描述输入框
+    taskdescEdit->setGeometry(QRect(QPoint(60, 150), QSize(900, 200)));
+    taskdescEdit->setPlaceholderText("请输入任务描述...");
+    taskdescEdit->setStyleSheet("QTextEdit{font-size: 18px; border: 2px #dedede; border-radius: 5px; color: black; background-color: #e6e7e7;}");
+    QPushButton* confirm_desc = new QPushButton(addTaskWindow);
+    confirm_desc->setGeometry(QRect(QPoint(255, 360), QSize(60, 30)));
+    confirm_desc->setText("确认");
+    confirm_desc->setStyleSheet("QPushButton{background-color : #92bd6c; border : 2px #dedede; border-radius: 4px;}\
+                                 QPushButton:hover{background-color : lightgreen;}"
+    );
+    connect(confirm_desc, &QPushButton::clicked, [newtask, taskdescEdit]() {
+        newtask->setdescription(taskdescEdit->toPlainText());
+        //qDebug() << "input_desc:" << newtask->getdescription();
+    });
+    QPushButton* clear_desc = new QPushButton(addTaskWindow);
+    clear_desc->setGeometry(QRect(QPoint(705, 360), QSize(60, 30)));
+    clear_desc->setText("清空");
+    clear_desc->setStyleSheet("QPushButton{background-color : #f0b987; border : 2px #dedede; border-radius: 4px;}\
+                               QPushButton:hover{background-color : #f7e8a3;}"
+    );
+    connect(clear_desc, &QPushButton::clicked, [taskdescEdit]() {
+        taskdescEdit->clear();
+    });
+    QLabel* ddltime = new QLabel(addTaskWindow);
+    ddltime->move(60, 400);
+    ddltime->setStyleSheet("QLabel{font-size: 15px; font-weight: bold; color: #b5b5b4;}");
+    ddltime->setText("截止时间");
+    //截止时间输入框,截止时间默认当前时间+1天
+    QDateTimeEdit* ddltimeEdit = new QDateTimeEdit(addTaskWindow);
+    QDateTime current_time = QDateTime::currentDateTime();
+    current_time = current_time.addDays(1);
+    ddltimeEdit->setGeometry(QRect(QPoint(90, 430), QSize(200, 30)));
+    ddltimeEdit->setDisplayFormat("yyyy-MM-dd HH:mm");//设置显示格式为年-月-日 时:分
+    ddltimeEdit->setCalendarPopup(true);
+    ddltimeEdit->setDate(current_time.date());
+    ddltimeEdit->setTime(current_time.time());
+    ddltimeEdit->setStyleSheet("QDateTimeEdit{font-size: 18px; border: 2px #dedede; border-radius: 5px; color: black; background-color: #e6e7e7;}");
+    connect(ddltimeEdit, &QDateTimeEdit::dateTimeChanged, [newtask, ddltimeEdit]() {
+        newtask->set_ddldate(ddltimeEdit->date());
+        newtask->set_ddltime(ddltimeEdit->time());
+        //qDebug() << "ddl_date:" << newtask->get_ddldate() << "ddl_time:" << newtask->get_ddltime();
+    });
+    //闹钟提醒
+    QLabel* alarming = new QLabel(addTaskWindow);
+    alarming->move(510, 400);
+    alarming->setStyleSheet("QLabel{font-size: 15px; font-weight: bold; color: #b5b5b4;}");
+    alarming->setText("闹钟提醒");
+    //这里以后是滑动条来实现闹钟提醒功能
+    QCheckBox* alarmingCheck = new QCheckBox(addTaskWindow);
+    //默认不提醒
+    alarmingCheck->setChecked(false);
+    alarmingCheck->setGeometry(QRect(QPoint(510, 430), QSize(100, 30)));
+    alarmingCheck->setStyleSheet("QCheckBox{font-size: 18px; color: black;}");
+    connect(alarmingCheck, &QCheckBox::stateChanged, [newtask, alarmingCheck]() {
+        newtask->set_trigger(alarmingCheck->isChecked());
+        //qDebug() << "alarming:" << newtask->get_trigger();
+    });
+    //任务种类
+    QLabel* tasktype = new QLabel(addTaskWindow);
+    tasktype->move(60, 497);
+    tasktype->setStyleSheet("QLabel{font-size: 16px; font-weight: bold; color: #b5b5b4;}");
+    tasktype->setText("任务种类");
+    //任务种类选择框
+    QComboBox* tasktypeCombo = new QComboBox(addTaskWindow);
+    //获取任务种类列表
+    std::vector<Kind_Tag> kindtags = tasklist->kind_taglist->get_allkinds();
+    for (const Kind_Tag& kindtag : kindtags) {
+        tasktypeCombo->addItem(kindtag.getname());
+    }
+    //设置默认选择第一个任务种类
+    tasktypeCombo->setCurrentIndex(0);
+    tasktypeCombo->setGeometry(QRect(QPoint(180, 490), QSize(160, 30)));
+    tasktypeCombo->setStyleSheet("QComboBox{font-size: 18px; border: 2px #dedede; border-radius: 5px; color: black; background-color: #d0f5ff;}");
+    connect(tasktypeCombo, &QComboBox::currentTextChanged, [this, newtask, tasktypeCombo]() {
+        newtask->set_task_kind(this->tasklist->kind_taglist->get_kind(tasktypeCombo->currentText()));
+        //qDebug() << "task_kind:" << newtask->get_task_kind().getname();
+    });
+    //任务属性
+    QLabel* taskattribute = new QLabel(addTaskWindow);
+    taskattribute->move(500, 497);
+    taskattribute->setStyleSheet("QLabel{font-size: 16px; font-weight: bold; color: #b5b5b4;}");
+    taskattribute->setText("任务属性");
+    //任务属性选择框
+    QComboBox* taskattributeCombo = new QComboBox(addTaskWindow);
+    taskattributeCombo->addItem("紧急");
+    taskattributeCombo->addItem("重要");
+    taskattributeCombo->addItem("普通");
+    //设置默认选择第三个任务属性
+    taskattributeCombo->setCurrentIndex(2);
+    taskattributeCombo->setGeometry(QRect(QPoint(620, 490), QSize(160, 30)));
+    taskattributeCombo->setStyleSheet("QComboBox{font-size: 18px; border: 2px #dedede; border-radius: 5px; color: black; background-color: #d0f5ff;}");
+    connect(taskattributeCombo, &QComboBox::currentTextChanged, [newtask, taskattributeCombo]() {
+        switch (taskattributeCombo->currentIndex())
+        {
+        case 0:
+            newtask->set_task_attribute(Attribute_Tag(TaskPriority::Urgent));
+            break;
+        case 1:
+            newtask->set_task_attribute(Attribute_Tag(TaskPriority::Important));
+            break;
+        case 2:
+            newtask->set_task_attribute(Attribute_Tag(TaskPriority::Normal));
+            break;
+        default:
+            newtask->set_task_attribute(Attribute_Tag(TaskPriority::Normal));
+            break;
+        }
+        //qDebug() << "task_attribute:" << newtask->get_task_attribute().get_priority();
+    });
+
+    //确认和取消按钮
+    QPushButton* confirmButton = new QPushButton(addTaskWindow);
+    confirmButton->setGeometry(QRect(QPoint(300, 630), QSize(100, 30)));
+    confirmButton->setText("确认");
+    confirmButton->setStyleSheet("QPushButton{background-color : #92bd6c; border : 2px #dedede; border-radius: 5px;}\
+                                  QPushButton:hover{background-color : lightgreen;}"
+    );
+    connect(confirmButton, &QPushButton::clicked, [this, addTaskWindow, newtask]() {
+        //检查输入的任务设置参数是否合法
+        if (newtask->getname().isEmpty()) {
+            QMessageBox::warning(addTaskWindow, "错误", "任务名不能为空！");
+            return;
+        }
+        if (newtask->getdescription().isEmpty()) {
+            QMessageBox::warning(addTaskWindow, "错误", "任务描述不能为空！");
+            return;
+        }
+        if (newtask->get_ddldate().isNull() || newtask->get_ddltime().isNull()) {
+            QMessageBox::warning(addTaskWindow, "错误", "截止时间不能为空！");
+            return;
+        }
+        if (newtask->get_ddldate() < QDate::currentDate()) {
+            QMessageBox::warning(addTaskWindow, "错误", "截止日期不能小于当前日期！");
+            return;
+        }
+        if (newtask->get_ddldate() == QDate::currentDate() && newtask->get_ddltime() <= QTime::currentTime()) {
+            QMessageBox::warning(addTaskWindow, "错误", "截止时间不能小于当前时间！");
+            return;
+        }
+        //添加到tasklist中
+        newtask->set_settingdate(QDate::currentDate());
+        tasklist->taskpos++;
+        tasklist->addTask(newtask);
+        addTaskWindow->close();
+        delete addTaskWindow;
+        //更新tasklist显示
+        tasklist->sortlist();
+        update_tasklist_display();
+        //qDebug()<<"tasklist num:"<<tasklist->tasknum();
+    });
+    QPushButton* cancelButton = new QPushButton(addTaskWindow);
+    cancelButton->setGeometry(QRect(QPoint(700, 630), QSize(100, 30)));
+    cancelButton->setText("取消");
+    cancelButton->setStyleSheet("QPushButton{background-color : #f0b987; border : 2px #dedede; border-radius: 5px;}\
+                                 QPushButton:hover{background-color : #f7e8a3;}"
+    );
+    connect(cancelButton, &QPushButton::clicked, [addTaskWindow, newtask]() {
+        delete newtask->taskwindow;
+        delete newtask;//放弃创建的Task对象
+        addTaskWindow->close();
+        delete addTaskWindow;
+    });
+    addTaskWindow->show();
+}
+
+void TodoList::show_edit_taskwindow(QWidget* _parent, Task* edit_task, QLabel* task_name, QLabel* ddl_label, QLabel* task_kind, QLabel* task_attribute)
+{
+    //_parent是TodoList::displayArea
+    //和show_add_taskwindow()类似，只是显示的是编辑的任务，而不是新建任务
+    //下方添加两个按钮，确认和取消
+    //点击确认按钮，检查输入的任务设置参数是否合法，如果合法，则创建Task对象，并添加到tasklist中，关闭窗口并释放窗口占用的内存
+    //然后更新tasklist显示
+    //点击取消按钮，关闭窗口并释放窗口占用的内存
+    QWidget* editTaskWindow = new QWidget(_parent);
+    editTaskWindow->setGeometry(QRect(QPoint(0, 0), QSize(1020, 680)));
+    editTaskWindow->setStyleSheet("QWidget{background-color: #f7f7f7;}");
+    Task* temp_task = new Task(0, edit_task->getname(), edit_task->getdescription(), edit_task->get_settingdate(), edit_task->get_ddldate(), edit_task->get_ddltime(), edit_task->get_task_kind(), edit_task->get_task_attribute(),Taskstatus::INCOMPLETE, edit_task->get_trigger());
+    /*
+    qDebug() << "temp_task:";
+    qDebug() << "name:" << temp_task->getname();
+    qDebug() << "description:" << temp_task->getdescription();
+    qDebug() << "setting_date:" << temp_task->get_settingdate();
+    qDebug() << "ddl_date:" << temp_task->get_ddldate();
+    qDebug() << "task_kind:" << temp_task->get_task_kind().getname();
+    qDebug() << "task_attribute:" << temp_task->get_task_attribute().get_priority();
+    qDebug() << "task_status:" << temp_task->get_status();
+    qDebug() << "alarming:" << temp_task->get_trigger();
+    */
+    temp_task->setParent(tasklist);
+    QLabel* tasktitle = new QLabel();
+    tasktitle->setParent(editTaskWindow);
+    tasktitle->move(60, 30);
+    tasktitle->setStyleSheet("QLabel{font-size: 15px; font-weight: bold; color: #b5b5b4;}");
+    tasktitle->setText("任务名");
+    //任务标题输入框
+    QLineEdit* tasktitleEdit = new QLineEdit(editTaskWindow);
+    tasktitleEdit->setGeometry(QRect(QPoint(60, 60), QSize(900, 40)));
+    //输入字体大小
+    tasktitleEdit->setStyleSheet("QLineEdit{font-size: 22px; border: 2px #dedede; border-radius: 5px; color: black; background-color: #e6e7e7;}");
+    //tasktitleEdit->setPlaceholderText(edit_task->getname());
+    tasktitleEdit->setText(edit_task->getname());
+    //QString new_name = edit_task->getname();
+    connect(tasktitleEdit, &QLineEdit::editingFinished, [temp_task, tasktitleEdit]() {
+        temp_task->setname(tasktitleEdit->text());
+        //qDebug() << "input_name:" << temp_task->getname();
+    });
+    QLabel* taskdesc = new QLabel();
+    taskdesc->setParent(editTaskWindow);
+    taskdesc->move(60, 120);
+    taskdesc->setStyleSheet("QLabel{font-size: 15px; font-weight: bold; color: #b5b5b4;}");
+    taskdesc->setText("任务描述");
+    //任务描述输入框
+    QTextEdit* taskdescEdit = new QTextEdit(editTaskWindow);
+    //任务描述输入框
+    taskdescEdit->setGeometry(QRect(QPoint(60, 150), QSize(900, 200)));
+    //taskdescEdit->setPlaceholderText(edit_task->getdescription());
+    taskdescEdit->setStyleSheet("QTextEdit{font-size: 18px; border: 2px #dedede; border-radius: 5px; color: black; background-color: #e6e7e7;}");
+    taskdescEdit->setText(edit_task->getdescription());
+    QPushButton* confirm_desc = new QPushButton(editTaskWindow);
+    confirm_desc->setGeometry(QRect(QPoint(255, 360), QSize(60, 30)));
+    confirm_desc->setText("确认");
+    confirm_desc->setStyleSheet("QPushButton{background-color : #92bd6c; border : 2px #dedede; border-radius: 4px;}\
+                                 QPushButton:hover{background-color : lightgreen;}"
+    );
+    //QString new_desc = edit_task->getdescription();
+    connect(confirm_desc, &QPushButton::clicked, [temp_task, taskdescEdit]() {
+        temp_task->setdescription(taskdescEdit->toPlainText());
+        //qDebug() << "input_desc:" << temp_task->getdescription();
+    });
+    QPushButton* clear_desc = new QPushButton(editTaskWindow);
+    clear_desc->setGeometry(QRect(QPoint(705, 360), QSize(60, 30)));
+    clear_desc->setText("清空");
+    clear_desc->setStyleSheet("QPushButton{background-color : #f0b987; border : 2px #dedede; border-radius: 4px;}\
+                               QPushButton:hover{background-color : #f7e8a3;}"
+    );
+    connect(clear_desc, &QPushButton::clicked, [taskdescEdit]() {
+        taskdescEdit->clear();
+    });
+    QLabel* ddltime = new QLabel(editTaskWindow);
+    ddltime->move(60, 400);
+    ddltime->setStyleSheet("QLabel{font-size: 15px; font-weight: bold; color: #b5b5b4;}");
+    ddltime->setText("截止时间");
+    //截止时间输入框
+    QDateTimeEdit* ddltimeEdit = new QDateTimeEdit(editTaskWindow);
+    ddltimeEdit->setGeometry(QRect(QPoint(90, 430), QSize(200, 30)));
+    ddltimeEdit->setDisplayFormat("yyyy-MM-dd HH:mm");//设置显示格式为年-月-日 时:分
+    ddltimeEdit->setCalendarPopup(true);
+    ddltimeEdit->setDate(edit_task->get_ddldate());
+    ddltimeEdit->setTime(edit_task->get_ddltime());
+    ddltimeEdit->setStyleSheet("QDateTimeEdit{font-size: 18px; border: 2px #dedede; border-radius: 5px; color: black; background-color: #e6e7e7;}");
+    //QDate new_ddldate = edit_task->get_ddldate();
+    //QTime new_ddltime = edit_task->get_ddltime();
+    connect(ddltimeEdit, &QDateTimeEdit::dateTimeChanged, [temp_task, ddltimeEdit]() {
+        temp_task->set_ddldate(ddltimeEdit->date());
+        temp_task->set_ddltime(ddltimeEdit->time());
+        //qDebug() << "ddl_date:" << temp_task->get_ddldate() << "ddl_time:" << temp_task->get_ddltime();
+    });
+    //闹钟提醒
+    QLabel* alarming = new QLabel(editTaskWindow);
+    alarming->move(510, 400);
+    alarming->setStyleSheet("QLabel{font-size: 15px; font-weight: bold; color: #b5b5b4;}");
+    alarming->setText("闹钟提醒");
+    //这里以后是滑动条来实现闹钟提醒功能
+    QCheckBox* alarmingCheck = new QCheckBox(editTaskWindow);
+    alarmingCheck->setChecked(edit_task->get_trigger());
+    alarmingCheck->setGeometry(QRect(QPoint(510, 430), QSize(100, 30)));
+    alarmingCheck->setStyleSheet("QCheckBox{font-size: 18px; color: black;}");
+    //bool new_trigger = edit_task->get_trigger();
+    connect(alarmingCheck, &QCheckBox::stateChanged, [temp_task, alarmingCheck]() {
+        temp_task->set_trigger(alarmingCheck->isChecked());
+        //qDebug() << "alarming:" << temp_task->get_trigger();
+    });
+    //任务种类
+    QLabel* tasktype = new QLabel(editTaskWindow);
+    tasktype->move(60, 497);
+    tasktype->setStyleSheet("QLabel{font-size: 16px; font-weight: bold; color: #b5b5b4;}");
+    tasktype->setText("任务种类");
+    //任务种类选择框
+    QComboBox* tasktypeCombo = new QComboBox(editTaskWindow);
+    //获取任务种类列表
+    std::vector<Kind_Tag> kindtags = tasklist->kind_taglist->get_allkinds();
+    for (const Kind_Tag& kindtag : kindtags) {
+        tasktypeCombo->addItem(kindtag.getname());
+    }
+    //tasktypeCombo->setCurrentIndex(0);
+    for (int i = 0; i < (int)kindtags.size(); i++) {
+        if (kindtags[i].getname() == edit_task->get_task_kind().getname()) {
+            tasktypeCombo->setCurrentIndex(i);
+            break;
+        }
+    }
+    tasktypeCombo->setGeometry(QRect(QPoint(180, 490), QSize(160, 30)));
+    tasktypeCombo->setStyleSheet("QComboBox{font-size: 18px; border: 2px #dedede; border-radius: 5px; color: black; background-color: #d0f5ff;}");
+    //Kind_Tag new_kindtag = edit_task->get_task_kind();
+    connect(tasktypeCombo, &QComboBox::currentTextChanged, [this, temp_task, tasktypeCombo]() {
+        temp_task->set_task_kind(this->tasklist->kind_taglist->get_kind(tasktypeCombo->currentText()));
+        //qDebug() << "task_kind:" << temp_task->get_task_kind().getname();
+    });
+    //任务属性
+    QLabel* taskattribute = new QLabel(editTaskWindow);
+    taskattribute->move(500, 497);
+    taskattribute->setStyleSheet("QLabel{font-size: 16px; font-weight: bold; color: #b5b5b4;}");
+    taskattribute->setText("任务属性");
+    //任务属性选择框
+    QComboBox* taskattributeCombo = new QComboBox(editTaskWindow);
+    taskattributeCombo->addItem("紧急");
+    taskattributeCombo->addItem("重要");
+    taskattributeCombo->addItem("普通");
+    taskattributeCombo->setCurrentIndex(edit_task->get_task_attribute().get_priority());
+    taskattributeCombo->setGeometry(QRect(QPoint(620, 490), QSize(160, 30)));
+    taskattributeCombo->setStyleSheet("QComboBox{font-size: 18px; border: 2px #dedede; border-radius: 5px; color: black; background-color: #d0f5ff;}");
+    //Attribute_Tag new_attribute = edit_task->get_task_attribute();
+    connect(taskattributeCombo, &QComboBox::currentTextChanged, [temp_task, taskattributeCombo]() {
+        switch (taskattributeCombo->currentIndex())
+        {
+        case 0:
+            temp_task->set_task_attribute(Attribute_Tag(TaskPriority::Urgent));
+            break;
+        case 1:
+            temp_task->set_task_attribute(Attribute_Tag(TaskPriority::Important));
+            break;
+        case 2:
+            temp_task->set_task_attribute(Attribute_Tag(TaskPriority::Normal));
+            break;
+        default:
+            temp_task->set_task_attribute(Attribute_Tag(TaskPriority::Normal));
+            break;
+        }
+        //qDebug() << "task_attribute:" << temp_task->get_task_attribute().get_priority();
+    });
+    //确认和取消按钮
+    QPushButton* confirmButton = new QPushButton(editTaskWindow);
+    confirmButton->setGeometry(QRect(QPoint(300, 630), QSize(100, 30)));
+    confirmButton->setText("确认");
+    confirmButton->setStyleSheet("QPushButton{background-color : #92bd6c; border : 2px #dedede; border-radius: 5px;}\
+                                  QPushButton:hover{background-color : lightgreen;}"
+    );
+    connect(confirmButton, &QPushButton::clicked, [editTaskWindow, temp_task, edit_task, task_name, ddl_label, task_kind, task_attribute]() {
+        //检查输入的任务设置参数是否合法
+        if (temp_task->getname().isEmpty()) {
+            QMessageBox::warning(editTaskWindow, "错误", "任务名不能为空！");
+            return;
+        }
+        if (temp_task->getdescription().isEmpty()) {
+            QMessageBox::warning(editTaskWindow, "错误", "任务描述不能为空！");
+            return;
+        }
+        if (temp_task->get_ddldate().isNull() || temp_task->get_ddltime().isNull()) {
+            QMessageBox::warning(editTaskWindow, "错误", "截止时间不能为空！");
+            return;
+        }
+        if (temp_task->get_ddldate() < QDate::currentDate()) {
+            QMessageBox::warning(editTaskWindow, "错误", "截止日期不能小于当前日期！");
+            return;
+        }
+        if (temp_task->get_ddldate() == QDate::currentDate() && temp_task->get_ddltime() <= QTime::currentTime()) {
+            QMessageBox::warning(editTaskWindow, "错误", "截止时间不能小于当前时间！");
+            return;
+        }
+        //修改edit_task的属性
+        edit_task->setname(temp_task->getname());
+        edit_task->setdescription(temp_task->getdescription());
+        edit_task->set_ddldate(temp_task->get_ddldate());
+        edit_task->set_ddltime(temp_task->get_ddltime());
+        edit_task->set_trigger(temp_task->get_trigger());
+        edit_task->set_task_kind(temp_task->get_task_kind());
+        edit_task->set_task_attribute(temp_task->get_task_attribute());
+        //修改edit_task的显示
+        //需要修改的显示内容有:任务名,任务截止时间,任务种类,任务属性
+        task_name->setText(edit_task->getname());
+        QDateTime ddl_datetime = QDateTime(edit_task->get_ddldate(), edit_task->get_ddltime());
+        ddl_label->setText(ddl_datetime.toString("yyyy年MM月dd日 hh:mm"));
+        task_kind->setText(edit_task->get_task_kind().getname());
+        switch (edit_task->get_task_attribute().get_priority())
+        {
+        case TaskPriority::Urgent:
+            task_attribute->setStyleSheet("QLabel{background-color:#c5ecc3;font-size:22px;color:#e34631;border-radius:5px;}");
+            task_attribute->setText("紧急");
+            break;
+        case TaskPriority::Important:
+            task_attribute->setStyleSheet("QLabel{background-color:#c5ecc3;font-size:22px;color:#eea144;border-radius:5px;}");
+            task_attribute->setText("重要");
+            break;
+        case TaskPriority::Normal:
+            task_attribute->setStyleSheet("QLabel{background-color:#c5ecc3;font-size:22px;color:#1a251a;border-radius:5px;}");
+            task_attribute->setText("普通");
+            break;
+        default:
+            task_attribute->setStyleSheet("QLabel{background-color:#c5ecc3;font-size:22px;color:#1a251a;border-radius:5px;}");
+            task_attribute->setText("普通");
+            break;
+        }
+        delete temp_task->taskwindow;
+        delete temp_task;
+        editTaskWindow->close();
+        delete editTaskWindow;
+        //更新tasklist显示
+        //tasklist->sortlist();
+        //update_tasklist_display();
+        //qDebug() << "tasklist num:" << tasklist->tasknum();
+        //更新
+    });
+    QPushButton* cancelButton = new QPushButton(editTaskWindow);
+    cancelButton->setGeometry(QRect(QPoint(700, 630), QSize(100, 30)));
+    cancelButton->setText("取消");
+    cancelButton->setStyleSheet("QPushButton{background-color : #f0b987; border : 2px #dedede; border-radius: 5px;}\
+                                 QPushButton:hover{background-color : #f7e8a3;}"
+    );
+    connect(cancelButton, &QPushButton::clicked, [editTaskWindow, temp_task]() {
+        delete temp_task->taskwindow;
+        delete temp_task;
+        editTaskWindow->close();
+        delete editTaskWindow;
+    });
+    editTaskWindow->show();
 }

@@ -10,5 +10,6 @@
         <file>pic_resources/delete.png</file>
         <file>pic_resources/toleft.png</file>
         <file>pic_resources/toright.png</file>
+        <file>TodoList.ico</file>
     </qresource>
 </RCC>

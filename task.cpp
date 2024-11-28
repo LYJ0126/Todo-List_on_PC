@@ -1,9 +1,9 @@
 #include "task.h"
 
-Task::Task(int _id, QString _name, QString _description,QDate _settingdate, QDate _ddldate,\
+Task::Task(int _id, QString _name, QString _description,QDate _settingdate, QDate _ddldate, QTime _ddltime,\
                Kind_Tag _task_kind, Attribute_Tag _task_attribute, Taskstatus _status, bool _trigger, QWidget* _parent)
     :id(_id), name(_name), description(_description), settingdate(_settingdate), ddldate(_ddldate),\
-    task_kind(_task_kind), task_attribute(_task_attribute), status(_status), trigger(_trigger)
+    ddltime(_ddltime),task_kind(_task_kind), task_attribute(_task_attribute), status(_status), trigger(_trigger)
 {
     this->setParent(_parent);
     taskwindow = new QWidget(_parent);
@@ -14,6 +14,26 @@ Task::~Task()
     //delete taskwindow;
     qDebug() << "Task with id: " << id << " is deleted";
 }
+
+/*
+Task& Task::operator=(const Task& other)
+{
+    if (this != &other) {
+        id = other.id;
+        name = other.name;
+        description = other.description;
+        settingdate = other.settingdate;
+        ddldate = other.ddldate;
+        ddltime = other.ddltime;
+        task_kind = other.task_kind;
+        task_attribute = other.task_attribute;
+        status = other.status;
+        trigger = other.trigger;
+        //taskwindow = other.taskwindow;
+    }
+    return *this;
+}
+*/
 
 int Task::getid() const
 {
