@@ -143,7 +143,7 @@ void TodoList::initUI()
     historyWidget->setGeometry(QRect(QPoint(0, 0), QSize(1020, 680)));
     feedbackWidget->setGeometry(QRect(QPoint(0,0), QSize(1020,680)));
     settingsWidget->setGeometry(QRect(QPoint(0, 0), QSize(1020, 680)));
-    tasklistWidget->setStyleSheet("QWidget{background-color : orange;}");
+    tasklistWidget->setStyleSheet("QWidget{background-color : #f7f7f7;}");
     historyWidget->setStyleSheet("QWidget{background-color : lightgreen;}");
     feedbackWidget->setStyleSheet("QWidget{background-color : lightyellow;}");
     settingsWidget->setStyleSheet("QWidget{background-color : lightcoral;}");
