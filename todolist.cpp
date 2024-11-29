@@ -474,6 +474,7 @@ void TodoList::generate_taskwindow(int pos)
     if (cur_task->get_status() == Taskstatus::COMPLETED) {
         complete_checkbox->setChecked(true);
         complete_checkbox->setEnabled(false);//已完成的任务无法再修改确认完成按钮状态
+        edit_button->setEnabled(false);//已完成的任务无法再编辑
     }
     //点击确认完成按钮后弹出确认框,确认后将任务状态设置为已完成,并且无法再修改确认完成按钮状态,且编辑按钮变为不可点击
     connect(complete_checkbox, &QCheckBox::clicked, [this, cur_task, complete_checkbox, edit_button]() {
@@ -712,7 +713,11 @@ void TodoList::show_add_taskwindow(QWidget* _parent)
     taskdescEdit->setGeometry(QRect(QPoint(60, 150), QSize(900, 200)));
     taskdescEdit->setPlaceholderText("请输入任务描述...");
     taskdescEdit->setStyleSheet("QTextEdit{font-size: 18px; border: 2px #dedede; border-radius: 5px; color: black; background-color: #e6e7e7;}");
-    QPushButton* confirm_desc = new QPushButton(addTaskWindow);
+    connect(taskdescEdit, &QTextEdit::textChanged, [newtask, taskdescEdit]() {
+        newtask->setdescription(taskdescEdit->toPlainText());
+        //qDebug() << "input_desc:" << newtask->getdescription();
+    });
+    /*QPushButton* confirm_desc = new QPushButton(addTaskWindow);
     confirm_desc->setGeometry(QRect(QPoint(255, 360), QSize(60, 30)));
     confirm_desc->setText("确认");
     confirm_desc->setStyleSheet("QPushButton{background-color : #92bd6c; border : 2px #dedede; border-radius: 4px;}\
@@ -721,9 +726,9 @@ void TodoList::show_add_taskwindow(QWidget* _parent)
     connect(confirm_desc, &QPushButton::clicked, [newtask, taskdescEdit]() {
         newtask->setdescription(taskdescEdit->toPlainText());
         //qDebug() << "input_desc:" << newtask->getdescription();
-    });
+    });*/
     QPushButton* clear_desc = new QPushButton(addTaskWindow);
-    clear_desc->setGeometry(QRect(QPoint(705, 360), QSize(60, 30)));
+    clear_desc->setGeometry(QRect(QPoint(880, 360), QSize(80, 30)));
     clear_desc->setText("清空");
     clear_desc->setStyleSheet("QPushButton{background-color : #f0b987; border : 2px #dedede; border-radius: 4px;}\
                                QPushButton:hover{background-color : #f7e8a3;}"
@@ -820,7 +825,7 @@ void TodoList::show_add_taskwindow(QWidget* _parent)
 
     //确认和取消按钮
     QPushButton* confirmButton = new QPushButton(addTaskWindow);
-    confirmButton->setGeometry(QRect(QPoint(300, 630), QSize(100, 30)));
+    confirmButton->setGeometry(QRect(QPoint(235, 630), QSize(100, 30)));
     confirmButton->setText("确认");
     confirmButton->setStyleSheet("QPushButton{background-color : #92bd6c; border : 2px #dedede; border-radius: 5px;}\
                                   QPushButton:hover{background-color : lightgreen;}"
@@ -859,7 +864,7 @@ void TodoList::show_add_taskwindow(QWidget* _parent)
         //qDebug()<<"tasklist num:"<<tasklist->tasknum();
     });
     QPushButton* cancelButton = new QPushButton(addTaskWindow);
-    cancelButton->setGeometry(QRect(QPoint(700, 630), QSize(100, 30)));
+    cancelButton->setGeometry(QRect(QPoint(685, 630), QSize(100, 30)));
     cancelButton->setText("取消");
     cancelButton->setStyleSheet("QPushButton{background-color : #f0b987; border : 2px #dedede; border-radius: 5px;}\
                                  QPushButton:hover{background-color : #f7e8a3;}"
@@ -926,7 +931,11 @@ void TodoList::show_edit_taskwindow(QWidget* _parent, Task* edit_task, QLabel* t
     //taskdescEdit->setPlaceholderText(edit_task->getdescription());
     taskdescEdit->setStyleSheet("QTextEdit{font-size: 18px; border: 2px #dedede; border-radius: 5px; color: black; background-color: #e6e7e7;}");
     taskdescEdit->setText(edit_task->getdescription());
-    QPushButton* confirm_desc = new QPushButton(editTaskWindow);
+    connect(taskdescEdit, &QTextEdit::textChanged, [temp_task, taskdescEdit]() {
+        temp_task->setdescription(taskdescEdit->toPlainText());
+        //qDebug() << "input_desc:" << temp_task->getdescription();
+    });
+    /*QPushButton* confirm_desc = new QPushButton(editTaskWindow);
     confirm_desc->setGeometry(QRect(QPoint(255, 360), QSize(60, 30)));
     confirm_desc->setText("确认");
     confirm_desc->setStyleSheet("QPushButton{background-color : #92bd6c; border : 2px #dedede; border-radius: 4px;}\
@@ -936,9 +945,9 @@ void TodoList::show_edit_taskwindow(QWidget* _parent, Task* edit_task, QLabel* t
     connect(confirm_desc, &QPushButton::clicked, [temp_task, taskdescEdit]() {
         temp_task->setdescription(taskdescEdit->toPlainText());
         //qDebug() << "input_desc:" << temp_task->getdescription();
-    });
+    });*/
     QPushButton* clear_desc = new QPushButton(editTaskWindow);
-    clear_desc->setGeometry(QRect(QPoint(705, 360), QSize(60, 30)));
+    clear_desc->setGeometry(QRect(QPoint(880, 360), QSize(80, 30)));
     clear_desc->setText("清空");
     clear_desc->setStyleSheet("QPushButton{background-color : #f0b987; border : 2px #dedede; border-radius: 4px;}\
                                QPushButton:hover{background-color : #f7e8a3;}"
@@ -1040,7 +1049,7 @@ void TodoList::show_edit_taskwindow(QWidget* _parent, Task* edit_task, QLabel* t
     });
     //确认和取消按钮
     QPushButton* confirmButton = new QPushButton(editTaskWindow);
-    confirmButton->setGeometry(QRect(QPoint(300, 630), QSize(100, 30)));
+    confirmButton->setGeometry(QRect(QPoint(235, 630), QSize(100, 30)));
     confirmButton->setText("确认");
     confirmButton->setStyleSheet("QPushButton{background-color : #92bd6c; border : 2px #dedede; border-radius: 5px;}\
                                   QPushButton:hover{background-color : lightgreen;}"
@@ -1111,7 +1120,7 @@ void TodoList::show_edit_taskwindow(QWidget* _parent, Task* edit_task, QLabel* t
         //更新
     });
     QPushButton* cancelButton = new QPushButton(editTaskWindow);
-    cancelButton->setGeometry(QRect(QPoint(700, 630), QSize(100, 30)));
+    cancelButton->setGeometry(QRect(QPoint(685, 630), QSize(100, 30)));
     cancelButton->setText("取消");
     cancelButton->setStyleSheet("QPushButton{background-color : #f0b987; border : 2px #dedede; border-radius: 5px;}\
                                  QPushButton:hover{background-color : #f7e8a3;}"

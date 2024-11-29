@@ -1,4 +1,5 @@
 #include "tasklist.h"
+#include "task.h"
 #include <algorithm>
 
 TaskList::TaskList(QWidget *parent, Sortmethod sortmethod)
@@ -200,6 +201,7 @@ void TaskList::saveToJson(const QString& filepath)
     file2.close();
 }
 
+/*
 void TaskList::display_add_taskwindow(QWidget* parent)
 {
     //parent是TodoList::displayArea
@@ -351,7 +353,7 @@ void TaskList::display_add_taskwindow(QWidget* parent)
     
     //确认和取消按钮
     QPushButton* confirmButton = new QPushButton(addTaskWindow);
-    confirmButton->setGeometry(QRect(QPoint(300, 630), QSize(100, 30)));
+    confirmButton->setGeometry(QRect(QPoint(235, 630), QSize(100, 30)));
     confirmButton->setText("确认");
     confirmButton->setStyleSheet("QPushButton{background-color : #92bd6c; border : 2px #dedede; border-radius: 5px;}\
                                   QPushButton:hover{background-color : lightgreen;}"
@@ -388,7 +390,7 @@ void TaskList::display_add_taskwindow(QWidget* parent)
         delete addTaskWindow;
     });
     QPushButton* cancelButton = new QPushButton(addTaskWindow);
-    cancelButton->setGeometry(QRect(QPoint(700, 630), QSize(100, 30)));
+    cancelButton->setGeometry(QRect(QPoint(685, 630), QSize(100, 30)));
     cancelButton->setText("取消");
     cancelButton->setStyleSheet("QPushButton{background-color : #f0b987; border : 2px #dedede; border-radius: 5px;}\
                                  QPushButton:hover{background-color : #f7e8a3;}"
@@ -399,4 +401,4 @@ void TaskList::display_add_taskwindow(QWidget* parent)
         delete addTaskWindow;
     });
     addTaskWindow->show();
-}
+}*/

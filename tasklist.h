@@ -22,9 +22,9 @@
 #include <QMessageBox>
 #include "kind_taglist.h"
 //#include <QDebug>
-#include "task.h"
+//#include "task.h"
 
-class TodoList;//前向声明
+class Task;//前向声明
 
 enum Sortmethod
 {
@@ -57,7 +57,7 @@ public:
     static bool compareBySetDate(Task* a, Task* b);
     static bool compareByDdl(Task* a, Task* b);
     static bool compareByAttribute(Task* a, Task* b);
-    void display_add_taskwindow(QWidget* parent);//显示添加任务窗口(由TodoList中的添加任务按钮触发)
+    //void display_add_taskwindow(QWidget* parent);//显示添加任务窗口(由TodoList中的添加任务按钮触发)
     QVector<QWidget*> tasklist_widgets;//一页显示3个任务widget,总共显示1 + tasknum()/3个页面
     //void generate_tasklist_widgets();
 

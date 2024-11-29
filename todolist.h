@@ -12,6 +12,7 @@
 #include <QGraphicsScene>
 #include <QGraphicsView>
 #include "tasklist.h"
+#include "task.h"
 //#include "kind_taglist.h"
 
 QT_BEGIN_NAMESPACE
